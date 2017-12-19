@@ -1,5 +1,6 @@
-function [LH] = latentheat(BR,H)
-%Latent heat computed from bowen ratio
-LH = BR^(-1)*H;
+function [lambda] = latentheat(T)
+%Takes temperature [C] and returns value of latent heat of vaporization [J/g]
+  lambda = (2.501 - 0.0024 * T)*1000;
+  
 end
 

@@ -235,8 +235,6 @@ while (t_curr<tmax)
     result.SWup(cnt) = SWup_curr;
     result.LWup(cnt) = LWup_curr;
     result.LWdn(cnt) = LWdn_curr;
-    result.Rnet(cnt) = Rnet;
-    result.G(cnt) = G;
     result.H(cnt) = H;
     result.LH(cnt) = LH;
     result.ABL_h(cnt) = h;
@@ -274,17 +272,15 @@ if isequal(plots,'on')
     ylabel('h [m]')
     axis([0 t_day 0 3000])
     
-    subplot(2,2,4)
-    title('Simulated CV budget (+ for in)')
-    plot(linspace(0,t_day,cnt),result.Rnet,'-k')
+    figure()
+    title('Simulated ABL')
+    plot(linspace(0,t_day,cnt),result.ABL_h,'--k')
     hold on
-    plot(linspace(0,t_day,cnt),-result.G,'-g')
-    plot(linspace(0,t_day,cnt),-result.H,'-r')
-    plot(linspace(0,t_day,cnt),-result.LH,'-b')
-    legend('R_{net}','G','H','H_L')
+    plot(linspace(0,t_day,cnt),linspace(2500,2500,cnt),'-k')
+    legend('Simulated','Max Obs')
     xlabel('time [days]')
-    ylabel('E [Wm^{-2}]')
-    axis tight
+    ylabel('h [m]')
+    axis([0 t_day 0 3000])
     
 end   
     
