@@ -32,10 +32,8 @@ rho_air = 1; %[kg/m^3]
 dt= 60;           %model timestep [s]
 tmax= t_day*24*3600;  %maximum time [s]
 t_hr = 0:24;
-t_curr = 0;
 
 % Load data
-
 switch(driving_data_set)
     case 'MATERHORN'
         %tower heights
@@ -118,21 +116,20 @@ switch(driving_data_set)
     case 'Cabow'
         %spell cabow right and add data set!
 end
-%  time loop
 
+%atmospheric conditions
 RH=0.44; %mean 25m RH need to check time period
 e=RH*satvap(squeeze(mean(T_air_tower(1,1))),mean(H(:,1)),BR(1))/100; %vapor pressure [hPa]
 Psurf=1000;     %surface pressure [hPa]
 qair=(Rd/Rv)*e/Psurf;  %specific humidity [g/g]
-
-%atmospheric conditions
 hmin=100;       %minimum height of atmospheric boundary layer [m]
-gvmax=1/5000; %max vegetation conductance [m/s]; reciprocal of vegetation resistance
+gvmax=1/8000; %max vegetation conductance [m/s]; reciprocal of vegetation resistance
 thetavM0=(T_air_tower(1,1)+273.15)*(1+0.61*qair); %initial virtual potential temperature [K]; Eq. 1.5.1b of Stull [1988]
 Beta=.2;       %closure hypothesis:  fraction of surface virtual potential temperature flux that determines entrainment heat flux
 gamma=5/1000;   %5/1000   #slope of thetav above growing ABL [K/m]
 qabove=qair/5; %specific humidity of air above ABL [g/g] changed from 5 to 1
 
+%Initialize surface T based on upwave Longwave rad
 T_init = (LWup(1)/(sigma*emiss))^(1/4);
 T = T_init;
 Ta = T_air_tower(1,1);
@@ -286,6 +283,25 @@ if isequal(plots,'on')
     ylabel('E [Wm^{-2}]')
     axis tight
     
+    figure()
+    subplot(1,2,1)
+    plot(linspace(0,24,cnt/t_day), result.H((cnt-cnt/t_day+1):cnt))
+    hold on 
+    plot(linspace(0,25,49),playaSpring.H(data_start:data_end,2).*...
+        playaSpring.H(data_start:data_end,3).*playaSpring.H(data_start:data_end,15))
+    legend('obs (25.5 m)','modeled')
+    axis tight
+    ylabel('H [Wm^{-2}]')
+    xlabel('time [hrs]')
+    
+    subplot(1,2,2)
+    plot(linspace(0,25,49),playaSpring.LHflux(data_start:data_end,6))
+    hold on 
+    plot(linspace(0,24,cnt/t_day), result.LH((cnt-cnt/t_day+1):cnt))
+    legend('obs (10.4 m)','modeled')
+    axis tight
+    ylabel('H_L [Wm^{-2}]')
+    xlabel('time [hrs]')
 end   
     
     
