@@ -10,7 +10,7 @@ clear; clc; close all;
 %pick the data set to drive the simulation: ie 'MATERHORN' or 'Cabow'.
 driving_data_set= 'MATERHORN';
 %SHF formualtion: ie 'MOST' or 'Shao'
-HF_option = 'Shao';
+HF_option = 'MOST';
 %plots on?: opt, 'on' or 'off'
 plots = 'on';
 %atmosphere respond?
@@ -83,6 +83,10 @@ switch(driving_data_set)
         tke = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.tke(data_start:data_end,2:end)),linspace(0,24,1440));
         L = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.L(data_start:data_end,2:end)),linspace(0,24,1440),'spline');
         T_air_tower = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.derivedT(data_start:data_end,2:4:22)),linspace(0,24,1440),'spline');
+        %Computing drag coefficient for non-neutral conditions (per hour)
+        zeta = [0.405967591987653,	1.79075784723176,	0.0209220759296613,	1.70652034119992,	3.54795806836081,	15.9133087096185,	-3.02207506547757,	-0.341759085608449,	-1.20368229625590,	-1.28284369011724,	-1.11396080428715,	-1.53205435649209,	-1.03876262278506,	-0.905703575982586,	-0.954347088271912,	-0.661575432802616,	-0.709072759058575,	-0.502739096089809,	-0.710748095123254,	-0.368831557068724,	-0.281621327394183,	-0.116221268903314,	-0.0533745368836851,	-0.0621922059401636,	0.609550392995834];
+        zeta = interp1(linspace(0,24,25),zeta,linspace(0,24,1440),'spline');
+        %zeta above calculated based on L values from the experimental data (less manual calculation steps in matlab)
         %Plot data to sneak a peak
         if isequal(plots,'on')
             figure()
@@ -164,7 +168,7 @@ while (t_curr<tmax)
     
     %Compute SHF
     tke_curr = tke(input_cnt);
-    ra = ra_fun(z,tke_curr,z0,HF_option);
+    ra = ra_fun(z,tke_curr,z0,HF_option,U(input_cnt),zeta(input_cnt));
     H = ((Cp*rho_air)/ra)*(T-Ta);
     
     %Compute LHF
@@ -286,7 +290,7 @@ if isequal(plots,'on')
     figure()
     subplot(1,2,1)
     plot(linspace(0,24,cnt/t_day), result.H((cnt-cnt/t_day+1):cnt))
-    hold on 
+    hold on
     plot(linspace(0,25,49),playaSpring.H(data_start:data_end,2).*...
         playaSpring.H(data_start:data_end,3).*playaSpring.H(data_start:data_end,15))
     legend('obs (25.5 m)','modeled')
@@ -296,14 +300,14 @@ if isequal(plots,'on')
     
     subplot(1,2,2)
     plot(linspace(0,25,49),playaSpring.LHflux(data_start:data_end,6))
-    hold on 
+    hold on
     plot(linspace(0,24,cnt/t_day), result.LH((cnt-cnt/t_day+1):cnt))
     legend('obs (10.4 m)','modeled')
     axis tight
     ylabel('H_L [Wm^{-2}]')
     xlabel('time [hrs]')
-end   
-    
-    
-    
+end
+
+
+
 
