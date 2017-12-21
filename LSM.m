@@ -1,26 +1,25 @@
+function [result] = LSM(driving_data_set,HF_option,plots,atmrespondTF,ABLTF,t_day,tower_height)
 % LSM model
 % GOAL: drive a coupled LSM with experimental data from MATERHORN and
 % Cabow and compare the results with the Shao formualtion for the SHF to
 % the MOST formualtion against experimental data
 
-clear; clc;% close all;
-
 %SIMULATION OPTIONS
 
-%pick the data set to drive the simulation: ie 'MATERHORN' or 'Cabow'.
-driving_data_set= 'MATERHORN';
-%SHF formualtion: ie 'MOST' or 'Shao'
-HF_option = 'MOST';
-%plots on?: opt, 'on' or 'off'
-plots = 'on';
-%atmosphere respond?
-atmrespondTF = 'on';
-%boundary layer respondonse
-ABLTF ='on';
-%Days to simulate (days)
-t_day = 3;
-%tower height index 1 for 25m...6 for 0.5 m
-tower_height = 3;
+% %pick the data set to drive the simulation: ie 'MATERHORN' or 'Cabow'.
+% driving_data_set= 'MATERHORN';
+% %SHF formualtion: ie 'MOST' or 'Shao'
+% HF_option = 'MOST';
+% %plots on?: opt, 'on' or 'off'
+% plots = 'on';
+% %atmosphere respond?
+% atmrespondTF = 'on';
+% %boundary layer respondonse
+% ABLTF ='on';
+% %Days to simulate (days)
+% t_day = 3;
+% %tower height index 1 for 25m...6 for 0.5 m
+% tower_height = 3;
 %% Constants
 %Variables and constants
 Cp=1005.7; Cv=719; %heat capacities @ constant pressure & volume [J/kg/K] (Appendix 2 of Emanuel [1994])
@@ -317,4 +316,7 @@ end
 
 
 
+
+
+end
 
