@@ -245,8 +245,8 @@ close all
 end
 %% Plot mean error
 
-hr_start = 7*2;
-hr_end = 16*2;
+hr_start = 8*2;
+hr_end = 20*2;
 figure()
 handaxes1 = axes('Position', [0.12 0.12 0.8 0.8]);
 plot(mean(abs(error_shao(hr_start:hr_end,:)),1),heights,'k-*')
@@ -262,9 +262,7 @@ handaxes2 = axes('Position', [0.7 0.3 0.2 0.3]);
 
 plot(linspace(0,24,1440),result_shao(1).SWdn,  'k')
 hold on
-X = [linspace(hr_start/2,hr_end/2,(hr_end-hr_start)*30),fliplr(linspace(hr_start/2,hr_end/2,(hr_end-hr_start)*30))];
-Y = [linspace(0,0,(hr_end-hr_start)*30), fliplr(result_shao(1).SWdn(hr_start*30:hr_end*30-1))];
-fill(X,Y,[.7 .7 .7])
+fill(linspace(hr_start/2,hr_end/2,hr_end-hr_start)),result_shao(1).SWdn(hr_start*30:hr_end*30-1),'r')
 %set(handaxes2, 'Box', 'off')
 xlabel('t (hrs)')
 ylabel('SW$\downarrow$ (Wm$^{-2}$)')
