@@ -83,6 +83,10 @@ switch(driving_data_set)
         data_end = data_start + (2*24);%26 May 0000 UTC
         load('.\Materhorn_data\playaSpring30minLinDetUTESpac3.mat')
         U = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.spdAndDir(data_start:data_end,3:3:18)),linspace(0,24,1440),'spline');
+        u = detrend(interp1(linspace(0,24,49),rearrangeHeights(playaSpring.rotatedSonic(data_start:data_end,1:3:18)),linspace(0,24,1440),'spline'));
+        v = detrend(interp1(linspace(0,24,49),rearrangeHeights(playaSpring.rotatedSonic(data_start:data_end,2:3:18)),linspace(0,24,1440),'spline'));
+        w = detrend(interp1(linspace(0,24,49),rearrangeHeights(playaSpring.rotatedSonic(data_start:data_end,3:3:18)),linspace(0,24,1440),'spline'));
+        u_star = ((u.*w).^2+(v.*w).^2).^(1/4);
         tke = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.tke(data_start:data_end,2:end)),linspace(0,24,1440));
         L = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.L(data_start:data_end,2:end)),linspace(0,24,1440));
         T_air_tower = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.derivedT(data_start:data_end,2:4:22)),linspace(0,24,1440),'spline');

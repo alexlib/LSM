@@ -61,12 +61,12 @@ axis tight
 LES_res = 10; %[m]
 tke_1hr = reshape(tke,[(size(tke,1)/24),24,6]);
 nx = floor(x_1hr_mean/LES_res); %Think LES domain nx, number of x grid points (coarse grid)
-
-for z = 1:6
-    for 
-    end
-end
-
-
+% 
+% for z = 1:6
+%     for 
+%     end
+% end
+% 
+% 
 
 

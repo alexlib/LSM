@@ -78,12 +78,17 @@ switch(driving_data_set)
         
         
         %load tower data: 30 min data
+       %load tower data: 30 min data
         data_start = 1072;%25 May 0000 UTC
         data_end = data_start + (2*24);%26 May 0000 UTC
-        load('Materhorn_data/playaSpring30minLinDetUTESpac3.mat')
+        load('.\Materhorn_data\playaSpring30minLinDetUTESpac3.mat')
         U = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.spdAndDir(data_start:data_end,3:3:18)),linspace(0,24,1440),'spline');
+        u = detrend(interp1(linspace(0,24,49),rearrangeHeights(playaSpring.rotatedSonic(data_start:data_end,1:3:18)),linspace(0,24,1440),'spline'));
+        v = detrend(interp1(linspace(0,24,49),rearrangeHeights(playaSpring.rotatedSonic(data_start:data_end,2:3:18)),linspace(0,24,1440),'spline'));
+        w = detrend(interp1(linspace(0,24,49),rearrangeHeights(playaSpring.rotatedSonic(data_start:data_end,3:3:18)),linspace(0,24,1440),'spline'));
+        u_star = ((u.*w).^2+(v.*w).^2).^(1/4);
         tke = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.tke(data_start:data_end,2:end)),linspace(0,24,1440));
-        L = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.L(data_start:data_end,2:end)),linspace(0,24,1440));
+       L = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.L(data_start:data_end,2:end)),linspace(0,24,1440));
         T_air_tower = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.derivedT(data_start:data_end,2:4:22)),linspace(0,24,1440),'spline');
         %Computing drag coefficient for non-neutral conditions (per hour)
         %zeta = [0.405967591987653,	1.79075784723176,	0.0209220759296613,	1.70652034119992,	3.54795806836081,	15.9133087096185,	-3.02207506547757,	-0.341759085608449,	-1.20368229625590,	-1.28284369011724,	-1.11396080428715,	-1.53205435649209,	-1.03876262278506,	-0.905703575982586,	-0.954347088271912,	-0.661575432802616,	-0.709072759058575,	-0.502739096089809,	-0.710748095123254,	-0.368831557068724,	-0.281621327394183,	-0.116221268903314,	-0.0533745368836851,	-0.0621922059401636,	0.609550392995834];
@@ -171,7 +176,7 @@ while (t_curr<tmax)
     
     %Compute SHF
     tke_curr = tke(input_cnt,tower_height);
-    ra = ra_fun(z,tke_curr,z0,HF_option,U(input_cnt,tower_height),zeta(input_cnt,tower_height));
+    ra = ra_fun(z,tke_curr,z0,HF_option,u_star(input_cnt,tower_height),zeta(input_cnt,tower_height));
     H = ((Cp*rho_air)/ra)*(T-Ta);
     
     %Compute LHF
