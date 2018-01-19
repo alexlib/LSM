@@ -6,3 +6,9 @@
 *.png
 *.jpg
 *.pptx
+
+*.m~
+
+*.docx
+
+*.pdf
