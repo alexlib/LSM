@@ -1,4 +1,4 @@
-function [ra] = ra_fun(z,tke,z0,HF_option,U,zeta)
+function [ra] = ra_fun(z,tke,z0,HF_option,u_star,zeta)
 %compute the SHF areodymic resistance
 switch HF_option
     case 'Shao'
@@ -35,7 +35,7 @@ switch HF_option
         end
         
         CH=(k^2)/((log((z-d)/z0)-psi_M)*(log((z-d)/zT)-psi_H));  %CHANGED###aerodynamic transfer coefficient for non-neutral according to MOST in Garrett [1992] "The atmospheric boundary layer"
-        ra=1/(CH*U);                  %aerodynamic resistance [s/m]
+        ra=1/(CH*u_star);                  %aerodynamic resistance [s/m]
 end
 end
 

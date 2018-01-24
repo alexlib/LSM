@@ -2,12 +2,23 @@
 %following Shao 2013
 clear all; close all; clc;
 % formatting
-addpath('/Users/travismorrison/Documents/Code/functions_library')
+addpath('/Users/travismorrison-/Documents/Code/functions_library')
 ft_size = 25;
 set(groot, 'defaultAxesTickLabelInterpreter','latex');
 set(groot, 'defaultLegendInterpreter','latex');
 set(0,'defaultTextInterpreter','latex');
 set(0,'DefaultAxesFontSize',ft_size);
+%% Looking at u_star and sqrt(e)
+%load tower data: 30 min data
+data_start = 1072;%25 May 0000 UTC
+data_end = data_start + (2*24);%26 May 0000 UTC
+load('.\Materhorn_data\playaSpring30minLinDetUTESpac3.mat')
+
+
+
+
+
+
 %%
 %load tower data: 30 min data
 data_start = 1072;%25 May 0000 UTC

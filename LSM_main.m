@@ -10,7 +10,7 @@ clear; clc;% close all;
 %pick the data set to drive the simulation: ie 'MATERHORN' or 'Cabow'.
 driving_data_set= 'MATERHORN';
 %SHF formualtion: ie 'MOST' or 'Shao'
-HF_option = 'MOST';
+HF_option = 'Shao';
 %plots on?: opt, 'on' or 'off'
 plots = 'on';
 %atmosphere respond?
@@ -20,7 +20,7 @@ ABLTF ='on';
 %Days to simulate (days)
 t_day = 3;
 %tower height index 1 for 25m...6 for 0.5 m
-tower_height = 3;
+tower_height = 1;
 %% Constants
 %Variables and constants
 Cp=1005.7; Cv=719; %heat capacities @ constant pressure & volume [J/kg/K] (Appendix 2 of Emanuel [1994])
@@ -43,9 +43,9 @@ switch(driving_data_set)
         z = [25.5 19 10.4 5 2.02 0.61];
         
         %load radiation data: 5 min data
-        data_start = 6695+24; %24 May 0800 UTC
-        data_end = data_start + (12*24); %25 May 0800 UTC
-        load('.\Materhorn_data\MATERHORN_Rad_data.mat');
+        data_start = 6696; %25 May 0600 UTC
+        data_end = data_start + (12*24); %26 May 0800 UTC
+        load('./Materhorn_data/MATERHORN_Rad_data.mat');
         SWdn = interp1(linspace(0,24,289),rad_data(data_start:data_end,6),linspace(0,24,1440),'spline');
         SWup = interp1(linspace(0,24,289),rad_data(data_start:data_end,7),linspace(0,24,1440),'spline');
         LWdn = interp1(linspace(0,24,289),rad_data(data_start:data_end,8),linspace(0,24,1440),'spline');
@@ -60,7 +60,7 @@ switch(driving_data_set)
             plot(linspace(0,24,1440),SWup)
             legend('SWin','LWin','SWup')
             title('Driving radation data')
-            ylabel('E Wm^{-2}')
+            ylabel('E Wm$^{-2}$')
             axis tight
         end
         % clear rad_data;
@@ -77,17 +77,38 @@ switch(driving_data_set)
         Cs = Cp_soil*rho_soil*D; %heat capacity of organic soil [J/K/m2]
         
         
-        
         %load tower data: 30 min data
+        load('/Users/travismorrison/Documents/Local_Data/MATERHORN/data/tower_data/Playa_tower_raw/PlayaSpring_raw_2013_05_24.mat')
+        load('./Materhorn_data/playaSpring30minLinDetUTESpac3.mat')
+        start_index = 432000; %May 24 0600 UTC or 0000MST
+        end_index = start_index +(20*60*60*24); %May 25 0800 UTC or 0200MST
+        u_prime = rearrangeHeights(rawFlux.uPrime(start_index:end_index-1,:));
+        v_prime = rearrangeHeights(rawFlux.vPrime(start_index:end_index-1,:));
+        w_prime = rearrangeHeights(rawFlux.wPrime(start_index:end_index-1,:));
+        chunk = 20*60*10;
+        
+        %compute terms on 30 min chunk
+        u_prime_sq = squeeze(mean(reshape((u_prime(:,tower_height).^2)',[chunk,144]),1,'omitnan'));
+        v_prime_sq = squeeze(mean(reshape((v_prime(:,tower_height).^2)',[chunk,144]),1,'omitnan'));
+        w_prime_sq = squeeze(mean(reshape((w_prime(:,tower_height).^2)',[chunk,144]),1,'omitnan'));
+        
+        uw_prime = squeeze(mean(reshape((u_prime(:,tower_height).*w_prime(:,tower_height))',[chunk,144]),1,'omitnan'));
+        vw_prime = squeeze(mean(reshape((v_prime(:,tower_height).*w_prime(:,tower_height))',[chunk,144]),1,'omitnan'));
+
+        tke = 0.5.*(u_prime_sq+v_prime_sq+...
+            w_prime_sq);
+        
+        
+        u_star = (uw_prime.^2+vw_prime.^2).^(1/4);
+        %30 min data indexes
         data_start = 1072;%25 May 0000 UTC
         data_end = data_start + (2*24);%26 May 0000 UTC
-        load('.\Materhorn_data\playaSpring30minLinDetUTESpac3.mat')
         U = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.spdAndDir(data_start:data_end,3:3:18)),linspace(0,24,1440),'spline');
         u = detrend(interp1(linspace(0,24,49),rearrangeHeights(playaSpring.rotatedSonic(data_start:data_end,1:3:18)),linspace(0,24,1440),'spline'));
         v = detrend(interp1(linspace(0,24,49),rearrangeHeights(playaSpring.rotatedSonic(data_start:data_end,2:3:18)),linspace(0,24,1440),'spline'));
         w = detrend(interp1(linspace(0,24,49),rearrangeHeights(playaSpring.rotatedSonic(data_start:data_end,3:3:18)),linspace(0,24,1440),'spline'));
-        u_star = ((u.*w).^2+(v.*w).^2).^(1/4);
-        tke = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.tke(data_start:data_end,2:end)),linspace(0,24,1440));
+        u_star = interp1(linspace(0,24,144),u_star,linspace(0,24,1440));
+        tke = interp1(linspace(0,24,144),tke,linspace(0,24,1440));
         L = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.L(data_start:data_end,2:end)),linspace(0,24,1440));
         T_air_tower = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.derivedT(data_start:data_end,2:4:22)),linspace(0,24,1440),'spline');
         %Computing drag coefficient for non-neutral conditions (per hour)
@@ -101,20 +122,21 @@ switch(driving_data_set)
             subplot(5,1,1)
             plot(linspace(0,24,1440),U)
             axis tight
-            ylabel('U [ms^{-1}]')
+            ylabel('U [ms$^{-1}$]')
             title('Driving tower data')
             axis tight
             subplot(5,1,2)
             plot(linspace(0,24,1440),tke)
-            ylabel('TKE [m^2s^{-2}]')
+            ylabel('e [m$^2$s$^{-2}$]')
             axis tight
             subplot(5,1,3)
             plot(linspace(0,24,1440),L)
             ylabel('L [m]')
+            ylim([-10 10])
             subplot(5,1,4)
-            plot(linspace(0,24,1440),tke)
+            plot(linspace(0,24,1440),u_star)
             axis tight
-            ylabel('TKE')
+            ylabel('$u^*$ ms$^{-1}$')
             subplot(5,1,5)
             plot(linspace(0,24,1440),T_air_tower)
             ylabel('T [C]')
@@ -128,7 +150,7 @@ switch(driving_data_set)
     case 'Cabow'
         %spell cabow right and add data set!
 end
-
+%%
 %atmospheric conditions
 RH=0.44; %mean 25m RH need to check time period
 e=RH*satvap(squeeze(mean(T_air_tower(1,tower_height))),mean(H(:,tower_height)),BR(1))/100; %vapor pressure [hPa]
@@ -163,7 +185,7 @@ while (t_curr<tmax)
     LWup_curr = emiss*sigma*T^4; %[W/m^2]
     LWdn_curr = LWdn(input_cnt);
     SWdn_curr = SWdn(input_cnt);
-    SWup_curr = albedo*SWdn(input_cnt);
+    SWup_curr = SWup(input_cnt);
     Rnet = SWdn_curr - SWup_curr + LWdn_curr - LWup_curr;
     
     if isequal(atmrespondTF,'on')
@@ -175,8 +197,8 @@ while (t_curr<tmax)
     end
     
     %Compute SHF
-    tke_curr = tke(input_cnt,tower_height);
-    ra = ra_fun(z,tke_curr,z0,HF_option,U(input_cnt,tower_height),zeta(input_cnt,tower_height));
+    tke_curr = tke(input_cnt);
+    ra = ra_fun(z,tke_curr,z0,HF_option,u_star(input_cnt),zeta(input_cnt,tower_height));
     H = ((Cp*rho_air)/ra)*(T-Ta);
     
     %Compute LHF
@@ -260,7 +282,7 @@ if isequal(plots,'on')
     plot(linspace(0,t_day,cnt),result.T,'-k')
     hold on
     plot(linspace(0,t_day,cnt),result.Ta,'--k')
-    legend('T_s','T_a')
+    legend('$T_s$','$T_a$')
     xlabel('time [days]')
     ylabel('T [K]')
     
@@ -271,7 +293,7 @@ if isequal(plots,'on')
     plot(linspace(0,t_day,cnt),result.LH,'-b')
     legend('H','LH')
     xlabel('time [days]')
-    ylabel('E [Wm^{-2}]')
+    ylabel('E [Wm$^{-2}$]')
     
     subplot(2,2,3)
     title('Simulated ABL')
@@ -290,9 +312,9 @@ if isequal(plots,'on')
     plot(linspace(0,t_day,cnt),-result.G,'-g')
     plot(linspace(0,t_day,cnt),-result.H,'-r')
     plot(linspace(0,t_day,cnt),-result.LH,'-b')
-    legend('R_{net}','G','H','H_L')
+    legend('R$_{net}$','G','H','$H_L$')
     xlabel('time [days]')
-    ylabel('E [Wm^{-2}]')
+    ylabel('E [Wm$^{-2}$]')
     axis tight
     
     H_index = [15 27 75 39 51 63];
@@ -306,7 +328,7 @@ if isequal(plots,'on')
     %51 for 2 m
     legend('modeled','obs (25.5 m)')
     axis tight
-    ylabel('H [Wm^{-2}]')
+    ylabel('H [Wm$^{-2}$]')
     xlabel('time [hrs]')
     
     subplot(1,2,2)
@@ -315,7 +337,7 @@ if isequal(plots,'on')
     plot(linspace(0,24.5,49),playaSpring.LHflux(data_start:data_end,6))
     legend('modeled','obs (10.4 m)')
     axis tight
-    ylabel('H_L [Wm^{-2}]')
+    ylabel('$H_L$ [Wm$^{-2}$]')
     xlabel('time [hrs]')
 end
 
