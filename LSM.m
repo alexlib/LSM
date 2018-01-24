@@ -86,8 +86,10 @@ switch(driving_data_set)
         u = rearrangeHeights(playaSpring.rotatedSonic(data_start:data_end,1:3:18));
         v = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.rotatedSonic(data_start:data_end,2:3:18)),linspace(0,24,1440),'spline');
         w = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.rotatedSonic(data_start:data_end,3:3:18)),linspace(0,24,1440),'spline');
-        reshape(u,
-        u_star = ((u.*w).^2+(v.*w).^2).^(1/4);
+        
+        load('./Materhorn_data/u_star_sgs.mat')
+        load('./Materhorn_data/tke_sgs.mat')
+        
         tke = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.tke(data_start:data_end,2:end)),linspace(0,24,1440));
         L = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.L(data_start:data_end,2:end)),linspace(0,24,1440));
         T_air_tower = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.derivedT(data_start:data_end,2:4:22)),linspace(0,24,1440),'spline');

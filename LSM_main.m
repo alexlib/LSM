@@ -10,7 +10,7 @@ clear; clc;% close all;
 %pick the data set to drive the simulation: ie 'MATERHORN' or 'Cabow'.
 driving_data_set= 'MATERHORN';
 %SHF formualtion: ie 'MOST' or 'Shao'
-HF_option = 'Shao';
+HF_option = 'MOST';
 %plots on?: opt, 'on' or 'off'
 plots = 'on';
 %atmosphere respond?
@@ -20,7 +20,15 @@ ABLTF ='on';
 %Days to simulate (days)
 t_day = 3;
 %tower height index 1 for 25m...6 for 0.5 m
-tower_height = 1;
+tower_height = 2;
+
+
+ft_size = 25;
+set(groot, 'defaultAxesTickLabelInterpreter','latex');
+set(groot, 'defaultLegendInterpreter','latex');
+set(0,'defaultTextInterpreter','latex');
+set(0,'DefaultAxesFontSize',ft_size);
+
 %% Constants
 %Variables and constants
 Cp=1005.7; Cv=719; %heat capacities @ constant pressure & volume [J/kg/K] (Appendix 2 of Emanuel [1994])
@@ -101,14 +109,17 @@ switch(driving_data_set)
         
         u_star = (uw_prime.^2+vw_prime.^2).^(1/4);
         %30 min data indexes
-        data_start = 1072;%25 May 0000 UTC
-        data_end = data_start + (2*24);%26 May 0000 UTC
+        data_start = 1072;%24 May 0800 UTC
+        data_end = data_start + (2*24);%25 May 0800 UTC
         U = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.spdAndDir(data_start:data_end,3:3:18)),linspace(0,24,1440),'spline');
         u = detrend(interp1(linspace(0,24,49),rearrangeHeights(playaSpring.rotatedSonic(data_start:data_end,1:3:18)),linspace(0,24,1440),'spline'));
         v = detrend(interp1(linspace(0,24,49),rearrangeHeights(playaSpring.rotatedSonic(data_start:data_end,2:3:18)),linspace(0,24,1440),'spline'));
         w = detrend(interp1(linspace(0,24,49),rearrangeHeights(playaSpring.rotatedSonic(data_start:data_end,3:3:18)),linspace(0,24,1440),'spline'));
-        u_star = interp1(linspace(0,24,144),u_star,linspace(0,24,1440));
-        tke = interp1(linspace(0,24,144),tke,linspace(0,24,1440));
+        
+        load('./Materhorn_data/u_star_sgs.mat')
+        load('./Materhorn_data/tke_sgs.mat')
+        u_star = interp1(linspace(0,24,144),u_star_sgs,linspace(0,24,1440));
+        tke = interp1(linspace(0,24,144),tke_sgs,linspace(0,24,1440));
         L = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.L(data_start:data_end,2:end)),linspace(0,24,1440));
         T_air_tower = interp1(linspace(0,24,49),rearrangeHeights(playaSpring.derivedT(data_start:data_end,2:4:22)),linspace(0,24,1440),'spline');
         %Computing drag coefficient for non-neutral conditions (per hour)
