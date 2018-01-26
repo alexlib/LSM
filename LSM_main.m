@@ -10,7 +10,7 @@ clear; clc;% close all;
 %pick the data set to drive the simulation: ie 'MATERHORN' or 'Cabow'.
 driving_data_set= 'MATERHORN';
 %SHF formualtion: ie 'MOST' or 'Shao'
-HF_option = 'MOST';
+HF_option = 'Shao';
 %plots on?: opt, 'on' or 'off'
 plots = 'on';
 %atmosphere respond?
