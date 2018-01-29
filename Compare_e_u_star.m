@@ -32,21 +32,43 @@ theta_prime = rearrangeHeights(rawFlux.fwThPrime(start_index:end_index-1,:));
 clear rawFlux
 
 
-chunk = 20*60*15;
+chunk = 20*60*10;
 %compute terms on 15 min chunk
 u_prime_sq = squeeze(mean(reshape((u_prime.^2)',[chunk,144,6]),1,'omitnan'));
 v_prime_sq = squeeze(mean(reshape((v_prime.^2)',[chunk,144,6]),1,'omitnan'));
 w_prime_sq = squeeze(mean(reshape((w_prime.^2)',[chunk,144,6]),1,'omitnan'));
 
-uw_prime = squeeze(mean(reshape((u_prime.*w_prime)',[chunk,144,6]),1,'omitnan'));
-vw_prime = squeeze(mean(reshape((v_prime.*w_prime)',[chunk,144,6]),1,'omitnan'));
-wTheta_prime = squeeze(mean(reshape((w_prime.*theta_prime)',[chunk,144,6]),1,'omitnan'));
+%% compute turbulent Pr #
+
+wTheta_prime = w_prime.*theta_prime;
 
 %compute derivatives
 dt = 1/20; 
-du_dt = squeeze(mean(reshape(((u(2:end,:)-u(1:end-1,:))./dt)',[chunk,144,6]),1,'omitnan')); 
+du_dt = (u(2:end,:)-u(1:end-1,:))./dt; 
+
+dz_2 = 2.01-1.99;
+P = zeros(501,1);
+dT_dz = zeros(1728001,1);
+for i = 1:(end_index-start_index)
+    %fit to poly
+    P(:) = lagrangepoly([5,2.02,0.061],theta(i,4:6),0:.01:5);
+     %take derivate as a central difference around 2.02 m. There for with
+     %interpalation of 501 points we have a 2dz = .02
+        %
+    dT_dz(i) = (P(204) - P(202))/dz_2;
+    if mod(i,10000)==0
+        index = i
+    end
+end
 
 
+%%
+%Compute the turbulent Pr number then Chunk it
+Pr = squeeze(mean(reshape(((uw_prime(1:end,5).*dT_dz(1:end-1))./...
+    (wTheta_prime(1:end,5).*du_dt(1:end,5))),[chunk,144]),1,'omitnan'));
+
+uw_prime = squeeze(mean(reshape((u_prime.*w_prime)',[chunk,144,6]),1,'omitnan'));
+vw_prime = squeeze(mean(reshape((v_prime.*w_prime)',[chunk,144,6]),1,'omitnan'));
 
 %Compute tke and u_star
 tke = 0.5.*(u_prime_sq+v_prime_sq+...
@@ -54,7 +76,10 @@ tke = 0.5.*(u_prime_sq+v_prime_sq+...
 
 u_star = (uw_prime.^2+vw_prime.^2).^(1/4);
 
-%% plot
+
+
+%% plot tke and u_star
+
 figure()
 plot(linspace(0,24,144),tke(:,5).^.5,'k-*')
 hold on
@@ -73,6 +98,13 @@ xlabel('t (hrs)')
 ylabel('SWdn [Wm$^{-2}$]')
 axis tight
 grid on
+
+
+
+
+
+
+
 
 %% Use taylors frozen theory hypothesis
 load('./Materhorn_data/playaSpring30minLinDetUTESpac3.mat')
@@ -142,17 +174,45 @@ u_prime_sq_sgs = squeeze(mean(reshape((u_sgs.^2)',[chunk,144]),1,'omitnan'));
 v_prime_sq_sgs = squeeze(mean(reshape((v_sgs.^2)',[chunk,144]),1,'omitnan'));
 w_prime_sq_sgs = squeeze(mean(reshape((w_sgs.^2)',[chunk,144]),1,'omitnan'));
 
-uw_sgs = squeeze(mean(reshape((u_sgs.*w_sgs)',[chunk,144]),1,'omitnan'));
-vw_sgs = squeeze(mean(reshape((v_sgs.*w_sgs)',[chunk,144]),1,'omitnan'));
-wTheta_sgs = squeeze(mean(reshape((w_sgs.*theta_sgs)',[chunk,144]),1,'omitnan'));
 
+wTheta_sgs = squeeze(mean(reshape((w_sgs.*theta_sgs)',[chunk,144]),1,'omitnan'));
+uw_sgs = u_sgs.*w_sgs;
+wTheta_prime = w_prime.*theta_prime;
+
+%compute derivatives
+dt = 1/20; 
+du_dt = (u(2:end,:)-u(1:end-1,:))./dt; 
+
+dz_2 = 2.01-1.99;
+P = zeros(501,1);
+dT_dz = zeros(1728001,1);
+for i = 1:(end_index-start_index)
+    %fit to poly
+    P(:) = lagrangepoly([5,2.02,0.061],theta_sgs(i,4:6),0:.01:5);
+     %take derivate as a central difference around 2.02 m. There for with
+     %interpalation of 501 points we have a 2dz = .02
+        %
+    dT_dz(i) = (P(204) - P(202))/dz_2;
+    if mod(i,10000)==0
+        index = i
+    end
+end
+
+%Compute the turbulent Pr number then Chunk it
+Pr = squeeze(mean(reshape(((uw_prime(1:end,5).*dT_dz(1:end-1))./...
+    (wTheta_prime(1:end,5).*du_dt(1:end,5))),[chunk,144]),1,'omitnan'));
 
 %Compute tke and u_star
 tke_sgs = 0.5.*(u_prime_sq_sgs+v_prime_sq_sgs+...
     w_prime_sq_sgs);
+%ustar vars 
+uw_sgs = squeeze(mean(reshape((u_sgs.*w_sgs)',[chunk,144]),1,'omitnan'));
+vw_sgs = squeeze(mean(reshape((v_sgs.*w_sgs)',[chunk,144]),1,'omitnan'));
 
 u_star_sgs = (uw_sgs.^2+vw_sgs.^2).^(1/4);
 %%
+
+
 Pr = (uw_sgs)./(wTheta_sgs); 
 
 
@@ -175,6 +235,30 @@ xlabel('t (hrs)')
 ylabel('SWdn [Wm$^{-2}$]')
 axis tight
 grid on
+
+
+%% Plot kappa ustar against tke/Pr
+kappa =0.4;
+figure()
+plot(kappa.*u_star,tke(:,5).^.5,'ko')
+hold on
+legend('$\sqrt{e}$ [m$^2$s$^{-2}$]','$u^*$ [ms$^{-1}$]')
+xlabel("time [hrs]")
+axis tight
+grid on
+set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, .7, 0.96]);
+% Place second set of axes on same plot
+handaxes2 = axes('Position', [0.7 0.5 0.2 0.3]);
+
+plot(linspace(0,24,1440),SWdn,  'k--')
+%set(handaxes2, 'Box', 'off')
+xlabel('t (hrs)')
+ylabel('SWdn [Wm$^{-2}$]')
+axis tight
+grid on
+
+
+
 
 %% Compute pseudo flux with tower data
 emiss = 0.93; 
