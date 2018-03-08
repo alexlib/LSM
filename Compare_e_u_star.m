@@ -33,7 +33,7 @@ clear rawFlux
 
 
 chunk = 20*60*10;
-%compute terms on 15 min chunk
+%compute terms on 30 min chunk
 u_prime_sq = squeeze(mean(reshape((u_prime.^2)',[chunk,144,6]),1,'omitnan'));
 v_prime_sq = squeeze(mean(reshape((v_prime.^2)',[chunk,144,6]),1,'omitnan'));
 w_prime_sq = squeeze(mean(reshape((w_prime.^2)',[chunk,144,6]),1,'omitnan'));
@@ -49,6 +49,7 @@ du_dt = (u(2:end,:)-u(1:end-1,:))./dt;
 dz_2 = 2.01-1.99;
 P = zeros(501,1);
 dT_dz = zeros(1728001,1);
+
 for i = 1:(end_index-start_index)
     %fit to poly
     P(:) = lagrangepoly([5,2.02,0.061],theta(i,4:6),0:.01:5);
@@ -58,9 +59,9 @@ for i = 1:(end_index-start_index)
     dT_dz(i) = (P(204) - P(202))/dz_2;
     if mod(i,10000)==0
         index = i
-    end
+        enda
 end
-
+end
 
 % Calculate the unfiltered variables 
 uw_prime = squeeze(mean(reshape((u_prime.*w_prime)',[chunk,144,6]),1,'omitnan'));

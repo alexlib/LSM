@@ -8,13 +8,13 @@ set(groot, 'defaultLegendInterpreter','latex');
 set(0,'defaultTextInterpreter','latex');
 set(0,'DefaultAxesFontSize',ft_size);
 % looking at Playa on May 25th
-load('/Users/travismorrison/Documents/Local_Data/MATERHORN/data/tower_data/Tower_filtered/May_2013_Playa_Filtered_N_Taylors.mat');
+%%load('/Users/travismorrison/Documents/Local_Data/MATERHORN/data/tower_data/Tower_filtered/May_2013_Playa_Filtered_N_Taylors.mat');
 fprintf('Filtered Data Loaded: Filtered for Northerly Flow & u/U<0.3 \n')
 
 %Function loads data from the tower and filters for Northerly winds and
 %Taylors hypothesis (u'/U),0.3
-% [U_north_filt,u_filt,v_filt,w_filt,u_prime_filt,v_prime_filt,...
-%     w_prime_filt,tke_filt,L_filt,T_prime_filt, Temp_filt, t_filt] = Preparedata();
+[U_north_filt,u_filt,v_filt,w_filt,u_prime_filt,v_prime_filt,...
+    w_prime_filt,tke_filt,L_filt,T_prime_filt, Temp_filt, t_filt] = Preparedata();
 
 
 
@@ -78,10 +78,12 @@ for i = 1:nchunks
         %since we need theta for the finite difference in height
         
         %primes
-        LES.resolved.u_prime(start_index) = squeeze(mean(playa_filt.Hz_20.u_prime(start_index:end_index,tower_height),'omitnan')); %this solves for the grid resolved
-        LES.resolved.v_prime(start_index) = squeeze(mean(playa_filt.Hz_20.v_prime(start_index:end_index,tower_height),'omitnan')); %this solves for the grid resolved
-        LES.resolved.w_prime(start_index) = squeeze(mean(playa_filt.Hz_20.w_prime(start_index:end_index,tower_height),'omitnan')); %this solves for the grid resolved
-        LES.resolved.T_prime(start_index) = squeeze(mean(playa_filt.Hz_20.T_prime(start_index:end_index,tower_height),'omitnan')); %this solves for the grid resolved
+%         LES.resolved.u_prime(start_index) = squeeze(mean(playa_filt.Hz_20.u_prime(start_index:end_index,tower_height),'omitnan')); %this solves for the grid resolved
+%         LES.resolved.v_prime(start_index) = squeeze(mean(playa_filt.Hz_20.v_prime(start_index:end_index,tower_height),'omitnan')); %this solves for the grid resolved
+%         LES.resolved.w_prime(start_index) = squeeze(mean(playa_filt.Hz_20.w_prime(start_index:end_index,tower_height),'omitnan')); %this solves for the grid resolved
+%         LES.resolved.T_prime(start_index) = squeeze(mean(playa_filt.Hz_20.T_prime(start_index:end_index,tower_height),'omitnan')); %this solves for the grid resolved
+          LES.resolved.wT_prime(start_index) = squeeze(mean(playa_filt.Hz_20.w_prime(start_index:end_index,tower_height).*playa_filt.Hz_20.T_prime(start_index:end_index,tower_height),'omitnan')); %this solves for the grid resolved
+          LES.resolved.uw_prime(start_index) = squeeze(mean(playa_filt.Hz_20.u_prime(start_index:end_index,tower_height).*playa_filt.Hz_20.w_prime(start_index:end_index,tower_height),'omitnan')); %this solves for the grid resolved
         start_index = start_index+1;
         end_index = end_index+1;
     end
@@ -115,51 +117,51 @@ for k = 1:6
     end
     height = k
 end
-%% Redistribute points over which 
+fprintf('resolved solved \n')
+% Redistribute points over which 
 LES.resolved.u_prime = interp1(linspace(0,24,tmp),LES.resolved.u_prime,linspace(0,24,turbo_var_length));
 LES.resolved.v_prime = interp1(linspace(0,24,tmp),LES.resolved.v_prime,linspace(0,24,turbo_var_length));
 LES.resolved.w_prime = interp1(linspace(0,24,tmp),LES.resolved.w_prime,linspace(0,24,turbo_var_length));
 LES.resolved.T_prime = interp1(linspace(0,24,tmp),LES.resolved.T_prime,linspace(0,24,turbo_var_length));
-%%
+
+LES.resolved.wT_prime = interp1(linspace(0,24,tmp),LES.resolved.wT_prime(1:tmp),linspace(0,24,turbo_var_length));
+LES.resolved.uw_prime = interp1(linspace(0,24,tmp),LES.resolved.uw_prime(1:tmp),linspace(0,24,turbo_var_length));
+
 for k = 1:6
-     test1(:,k) = interp1(linspace(0,24,tmp),LES.resolved.T(:,k),linspace(0,24,turbo_var_length));
+   test1(:,k) = interp1(linspace(0,24,tmp),LES.resolved.T(:,k),linspace(0,24,turbo_var_length));
    test2(:,k) = interp1(linspace(0,24,tmp),LES.resolved.u(:,k),linspace(0,24,turbo_var_length));
    test3(:,k) = interp1(linspace(0,24,tmp),LES.resolved.v(:,k),linspace(0,24,turbo_var_length));
    test4(:,k) = interp1(linspace(0,24,tmp),LES.resolved.w(:,k),linspace(0,24,turbo_var_length));
 end
+fprintf(' interp complete')
 %%
 LES.resolved.T = test1;
 LES.resolved.u = test2;
 LES.resolved.v = test3;
 LES.resolved.w = test4;
 %%
-for k = 1:6
-    LES.resolved.U(:,k) = sqrt(LES.resolved.u(:,k).^2+LES.resolved.v(:,k).^2+LES.resolved.w(:,k).^2);
-     LES.sgs.U(:,k) = sqrt(LES.sgs.u(:,k).^2+LES.sgs.v(:,k).^2+LES.sgs.w(:,k).^2);
-end
+LES.resolved.U = sqrt(LES.resolved.u.^2+LES.resolved.v.^2+LES.resolved.w.^2);
 
+%%
 
 %  LES.resolved.T(:,k) = interp1(linspace(0,24,tmp),LES.resolved.T(:,k),linspace(0,24,turbo_var_length));
 %     LES.resolved.u(:,k) = interp1(linspace(0,24,tmp),LES.resolved.u(:,k),linspace(0,24,turbo_var_length));
 %     LES.resolved.v(:,k) = interp1(linspace(0,24,tmp),LES.resolved.v(:,k),linspace(0,24,turbo_var_length));
 %     LES.resolved.w(:,k) = interp1(linspace(0,24,tmp),LES.resolved.w(:,k),linspace(0,24,turbo_var_length));
-%%
+%
 LES.sgs.u_prime = playa_filt.Hz_20.u_prime(:,tower_height)' - LES.resolved.u_prime;
 LES.sgs.v_prime = playa_filt.Hz_20.v_prime(:,tower_height)' - LES.resolved.v_prime;
 LES.sgs.w_prime = playa_filt.Hz_20.w_prime(:,tower_height)' - LES.resolved.w_prime;
 LES.sgs.T_prime = playa_filt.Hz_20.T_prime(:,tower_height)' - LES.resolved.T_prime;
+LES.sgs.wT_prime = playa_filt.Hz_20.wT_prime(:,tower_height)' - LES.resolved.wT_prime;
+LES.sgs.uw_prime = (playa_filt.Hz_20.u_prime(:,tower_height).*playa_filt.Hz_20.w_prime(:,tower_height))' - LES.resolved.uw_prime;
+
 LES.sgs.u = playa_filt.Hz_20.u - LES.resolved.u;
 LES.sgs.v = playa_filt.Hz_20.v - LES.resolved.v;
 LES.sgs.w = playa_filt.Hz_20.w - LES.resolved.w;
 LES.sgs.T = playa_filt.Hz_20.T - LES.resolved.T;
 LES.sgs.U = playa_filt.Hz_20.U - LES.resolved.U;
-
-
-%% need theta at each height
-for k = 1:6
-    theta_sgs(:,k) = theta(1:end-1,k) - theta_resolved_interp(:,k);
-    u_sgs(:,k) = u(1:end,k) - u_resolved_interp(:,k);
-end
+fprintf('sgs complete')
 
 %%
 
