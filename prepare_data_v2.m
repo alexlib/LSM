@@ -36,7 +36,7 @@ for j = 2:length(path_endings)-1
     clear output;
 end
 
-%%
+%
 
 %30 min time index
 t30min_index = 1;
@@ -75,6 +75,7 @@ for i = 2:length(path_endings)-1
             wprime_20Hz(vel_index_start:vel_index_end,:) = rearrangeHeights(rawFlux.wPF_Prime(raw_flux_indexStart:raw_flux_indexEnd,:));
             Tprime_20Hz(vel_index_start:vel_index_end,:) = rearrangeHeights(rawFlux.fwThPrime(raw_flux_indexStart:raw_flux_indexEnd,:));
             
+            t_20Hz(vel_index_start:vel_index_end) = rawFlux.t(raw_flux_indexStart:raw_flux_indexEnd);
             %incriments the index of the Northerly winds
             vel_index_start = vel_index_end+1;
             vel_index_end = vel_index_end+(20*30*60);
@@ -91,7 +92,7 @@ for i = 2:length(path_endings)-1
     clear rawFlux;
 end
 
-%%
+%
 
 figure()
 %plot(linspace(0,.5*693,24948000),u_20Hz(:,5))
@@ -103,7 +104,7 @@ hold on
 
 
 
-%% Chunking our raw variables in 30 minute chunks
+% Chunking our raw variables in 30 minute chunks
 
 
 
@@ -115,7 +116,7 @@ T_20Hz = reshape(T_20Hz,[36000,739,6]);
 u_20Hz = reshape(u_20Hz,[36000,739,6]);
 v_20Hz = reshape(v_20Hz,[36000,739,6]);
 w_20Hz = reshape(w_20Hz,[36000,739,6]);
-
+t_20Hz = reshape(t_20Hz,[36000,739]);
 %cleaning some space
 clear uprime_20Hz vprime_20Hz wprime_20Hz Tprime_20Hz 
 fprintf('turbulence variables loaded')
@@ -152,6 +153,7 @@ for i = 1:size(Taylors_ratio,2)
         u_20Hz_filt(:,cnt,:) = u_20Hz(:,i,:);
         v_20Hz_filt(:,cnt,:) = v_20Hz(:,i,:);
         w_20Hz_filt(:,cnt,:) = w_20Hz(:,i,:);
+        t_20Hz_filt(:,cnt,:) = t_20Hz(:,i,:);
         
         U_north_filt(cnt,:) = U_north(i+1,:);
         u_filt(cnt,:) = u(i+1,:);
@@ -174,8 +176,9 @@ playa_filt.Hz_20.w_prime = w_prime_filt;
 playa_filt.Hz_20.u = u_20Hz_filt;
 playa_filt.Hz_20.v = v_20Hz_filt;
 playa_filt.Hz_20.w = w_20Hz_filt;
-playa_filt.Hz_20.T_prime = T_prime_filt;
-playa_filt.Hz_20.T = T_20Hz_filt;
+playa_filt.Hz_20.fwTh_prime = T_prime_filt;
+playa_filt.Hz_20.fwT = T_20Hz_filt;
+playa_filt.Hz_20.t = t_20Hz_filt;
 
 playa_filt.min_30.U = U_north_filt;
 playa_filt.min_30.u = u_filt;
@@ -185,7 +188,7 @@ playa_filt.min_30.tke = tke_filt;
 playa_filt.min_30.L = L_filt;
 playa_filt.min_30.T = Temp_filt;
 playa_filt.min_30.t = t_filt;
-%% Plot all variables as sanity check. 
+% Plot all variables as sanity check. 
 chunk = 20*60*30;
 n_30min_chunks = 225;
 figure()
