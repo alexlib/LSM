@@ -9,7 +9,7 @@ set(0,'defaultTextInterpreter','latex');
 set(0,'DefaultAxesFontSize',ft_size);
 clc;
 %day_array = ["May9","May10","May14","May15","May17","May20","May31"];
-day_array = ["May15"];
+day_array = ["May14"];
 for day = 1:length(day_array)
 clearvars -except day day_array Shao_all Most_all wT_all;   
 day_of_interest = day_array(day);
@@ -310,7 +310,7 @@ Most_all = [Most_all; MOST_H];
 wT_all = [wT_all; playa_filt.min_30.H];
 end
 end
-close all
+
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Figure (4) overall 1 to 1
@@ -318,23 +318,23 @@ close all
 figure()
 subplot(1,2,1)
 title('Pr = 2')
-errorbar(mean(Shao_all,2,'omitnan'),mean(wT_all,2,'omitnan'),std(wT_all,0,2,'omitnan'),std(wT_all,0,2,'omitnan'),std(Shao_all,0,2,'omitnan'),std(Shao_all,0,2,'omitnan'),'ro')
+errorbar(mean(wT_all,2,'omitnan'),mean(Shao_all,2,'omitnan'),std(Shao_all,0,2,'omitnan'),std(Shao_all,0,2,'omitnan'),std(wT_all,0,2,'omitnan'),std(wT_all,0,2,'omitnan'),'ro')
 hold on 
 plot(linspace(-10, 250, 100),linspace(-10,250,100),'k-')
 grid on 
-xlabel('Shao \it{et al.}')
-ylabel('$\rho c_p \overline{w^\prime \theta^\prime}$')
+ylabel('Shao \it{et al.}')
+xlabel('$\rho c_p \overline{w^\prime \theta^\prime}$')
 axis equal 
 axis tight
 title('Pr = 2')
 
 subplot(1,2,2)
-errorbar(mean(Most_all,2,'omitnan'),mean(wT_all,2,'omitnan'),std(wT_all,0,2,'omitnan'),std(wT_all,0,2,'omitnan'),std(Most_all,0,2,'omitnan'),std(Most_all,0,2,'omitnan'),'ko')
+errorbar(mean(wT_all,2,'omitnan'),mean(Most_all,2,'omitnan'),std(Most_all,0,2,'omitnan'),std(Most_all,0,2,'omitnan'),std(wT_all,0,2,'omitnan'),std(wT_all,0,2,'omitnan'),'ko')
 hold on
 plot(linspace(-10, 250, 100),linspace(-10,250,100),'k-')
 grid on
-xlabel('MOST')
-ylabel('$\rho c_p \overline{w^\prime \theta^\prime}$')
+ylabel('MOST')
+xlabel('$\rho c_p \overline{w^\prime \theta^\prime}$')
 axis equal
 axis tight
 %axis
@@ -342,36 +342,54 @@ axis tight
 % 
 % %look at the T profile first over the period examined 
 % %(including the surface temperature)
-% tmp = [playa_filt.min_30.fwT(start_i:end_i-1,:),playa_filt.min_30.T_sur'];
-% tmp_z = [z,0];
+tmp = [playa_filt.min_30.fwT(start_i,:),playa_filt.min_30.T_sur(1)];
+tmp_z = [z,1];
+% fitT = zeros(n_chunks,5);
+% fitU = zeros(n_chunks,5);
+% dTdz = zeros(n_chunks,5);
+% dUdz = zeros(n_chunks,5);
+i = 0;
+%for i = 1:n_chunks
+[ fitzT,fitT, dTdz ] = nat_log_x_fit(z,playa_filt.min_30.fwT(start_i+i,:));
+[ fitzU,fitU, dUdz] = nat_log_x_fit(z,playa_filt.min_30.U(start_i+i,:));
+p1 = polyfit(z,playa_filt.min_30.fwT(start_i,:),2);
+p2 = polyfit(z,playa_filt.min_30.U(start_i,:),2);
+%end
+%
+figure()
+subplot(1,2,1)
+plot(playa_filt.min_30.fwT(start_i,:),z,'k*');
+hold on
+%plot(playa_filt.min_30.T_sur,0,'k*')
+plot(fitT,fitzT,'b-')
+plot(polyval(p1,z),z)
+axis tight
+legend('data','ln fit','poly fit')
+xlabel('T ($^{o}$C)')
+ylabel('z (m)')
+
+
+subplot(1,2,2)
+plot(playa_filt.min_30.U(start_i,:),z,'k*');
+hold on
+%plot(playa_filt.min_30.T_sur,0,'k*')
+plot(fitU,fitzU,'b-')
+plot(polyval(p2,z),z)
+axis tight
+xlabel('U (m/s)')
 % 
-% figure()
-% plot(playa_filt.min_30.fwT(start_i:end_i,:),z,'k-o');
-% hold on
-% plot(playa_filt.min_30.T_sur,0,'k-o')
-% axis tight
-% 
-% %Approxmate the temperature gradient using a log fit 
-% % NEED TO DOUBLE CHECK METHOD HERE!!
-% clear slope;
-% for t = start_i:end_i-1
-%    % [slope(t-start_i+1), intercept,MSE, R2, S] = logfit(playa_filt.min_30.fwT(t,:),z,'loglog')
-%    [slope(t-start_i+1), intercept,MSE, R2, S] = logfit(tmp(t-start_i+1,:),tmp_z,'loglog');
-% end
-% dT_dz = log(abs(slope));
-% 
-% %Compute the eddy diffusivity @ all heights
-% for i = 1:length(z)
-%     Kh_sg(:,i) = wTh_prime(:,i)./dT_dz';
-% end
-% 
-% %% Examine Shao's dependance on stability
-% %tower_height = 5;
-% figure()
-% plot(sqrt(playa_filt.min_30.tke(start_i:end_i-1,tower_height)).*z(tower_height),...
-%     Kh_sg(:,tower_height),'ko')
-% grid on
-% axis equal
+%% Compute the eddy diffusivity @ all heights
+for i = 1:length(z)
+    Kh_sg(i) = wTh_prime(1,i)./dTdz(5)';
+end
+
+% Examine Shao's dependance on stability
+%tower_height = 5;
+figure()
+plot(sqrt(playa_filt.min_30.tke(start_i,tower_height)).*z(tower_height),...
+    Kh_sg(:,tower_height),'ko')
+grid on
+axis equal
 
 
 
