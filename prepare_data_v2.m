@@ -36,7 +36,7 @@ for j = 2:length(path_endings)-1
     clear output;
 end
 
-%
+%%
 
 %30 min time index
 t30min_index = 1;
@@ -48,7 +48,7 @@ vel_index_end = 20*60*30;
 path = '/Users/travismorrison/Documents/Local_Data/MATERHORN/data/tower_data/Playa_tower_raw/Raw_planar_fit/PlayaSpring_raw_GPF_LinDet_2013';
 path_endings = ["_05_02","_05_04","_05_06","_05_08","_05_10","_05_12","_05_14",...
     "_05_16","_05_18","_05_20","_05_22","_05_24","_05_26","_05_28","_05_30","_06_01","_06_03","_06_05"];
-
+%
 file_30min_chunks = 3456000/(20*30*60);
 
 %starts at 2 because the _05_02 data is currupt 
@@ -67,13 +67,34 @@ for i = 2:length(path_endings)-1
             u_20Hz(vel_index_start:vel_index_end,:) = rearrangeHeights(rawFlux.uPF(raw_flux_indexStart:raw_flux_indexEnd,:));
             v_20Hz(vel_index_start:vel_index_end,:) = rearrangeHeights(rawFlux.vPF(raw_flux_indexStart:raw_flux_indexEnd,:));
             w_20Hz(vel_index_start:vel_index_end,:) = rearrangeHeights(rawFlux.wPF(raw_flux_indexStart:raw_flux_indexEnd,:));
-            T_20Hz(vel_index_start:vel_index_end,:) = rearrangeHeights(rawFlux.fwT(raw_flux_indexStart:raw_flux_indexEnd,:));
+            fwtmp_20Hz = rearrangeHeights(rawFlux.fwT(raw_flux_indexStart:raw_flux_indexEnd,:));
             
+            %replace nans with son data
+            fwtmp_20Hz = reshape(fwtmp_20Hz,[216000 1]); 
+            tmp = reshape(rearrangeHeights(rawFlux.sonTs(raw_flux_indexStart:raw_flux_indexEnd,:)), [216000 1]);
+            for k = 1:216000
+                if isnan(fwtmp_20Hz(k))
+                    fwtmp_20Hz(k) = tmp(k);
+                end
+            end
+            T_20Hz(vel_index_start:vel_index_end,:) = reshape(fwtmp_20Hz,[36000 6]); 
+                     
             uprime_20Hz(vel_index_start:vel_index_end,:) = rearrangeHeights(rawFlux.uPF_Prime(raw_flux_indexStart:raw_flux_indexEnd,:));
             uprime_20Hz(vel_index_start:vel_index_end,:) = rearrangeHeights(rawFlux.uPF_Prime(raw_flux_indexStart:raw_flux_indexEnd,:));
             vprime_20Hz(vel_index_start:vel_index_end,:) = rearrangeHeights(rawFlux.vPF_Prime(raw_flux_indexStart:raw_flux_indexEnd,:));
             wprime_20Hz(vel_index_start:vel_index_end,:) = rearrangeHeights(rawFlux.wPF_Prime(raw_flux_indexStart:raw_flux_indexEnd,:));
-            Tprime_20Hz(vel_index_start:vel_index_end,:) = rearrangeHeights(rawFlux.fwThPrime(raw_flux_indexStart:raw_flux_indexEnd,:));
+            fwtmp_prime_20Hz= rearrangeHeights(rawFlux.fwThPrime(raw_flux_indexStart:raw_flux_indexEnd,:));
+         
+            
+            %replace nans with son data
+            fwtmp_prime_20Hz = reshape(fwtmp_prime_20Hz,[216000 1]); 
+            tmp = reshape(rearrangeHeights(rawFlux.sonTsPrime(raw_flux_indexStart:raw_flux_indexEnd,:)), [216000 1]);
+            for k = 1:216000
+                if isnan(fwtmp_prime_20Hz(k))
+                    fwtmp_prime_20Hz(k) = tmp(k);
+                end
+            end
+             Tprime_20Hz(vel_index_start:vel_index_end,:) = reshape(fwtmp_prime_20Hz,[36000 6]); 
             
             t_20Hz(vel_index_start:vel_index_end) = rawFlux.t(raw_flux_indexStart:raw_flux_indexEnd);
             %incriments the index of the Northerly winds
